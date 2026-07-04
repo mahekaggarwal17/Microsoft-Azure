@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentimentPulse · Azure AI Language Studio</title>
+    <meta name="description" content="AI-powered natural language processing and review sentiment classification studio built on Microsoft Azure Cognitive Services Language API v2023-04-01.">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- ── Navigation Bar ─────────────────────────────────────────────── -->
+    <header class="navbar">
+        <a href="#" class="nav-brand">
+            <div class="nav-logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 23 23">
+                    <path fill="#f35325" d="M0 0h11v11H0z"/>
+                    <path fill="#81bc06" d="M12 0h11v11H12z"/>
+                    <path fill="#05a6f0" d="M0 12h11v11H0z"/>
+                    <path fill="#ffba08" d="M12 12h11v11H12z"/>
+                </svg>
+            </div>
+            <span>Azure AI <span style="font-weight: 300; color: var(--text-muted);">·</span> Sentiment<span class="gradient-text">Pulse</span></span>
+        </a>
+        <nav class="nav-actions">
+            <a href="#workspace" class="nav-link">Studio</a>
+            <a href="#analytics" class="nav-link">Analytics</a>
+            <a href="readme.md" class="nav-link">Documentation</a>
+            <div class="status-badge" id="statusPill">
+                <span class="status-dot"></span>
+                <span id="pillText">LIVE AZURE API · V2023-04-01</span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- ── Main Application Container ─────────────────────────────────── -->
+    <main class="container">
+
+        <!-- Hero Banner -->
+        <section class="hero">
+            <div class="hero-content">
+                <span class="eyebrow">Azure Cognitive Services · Text Analytics REST API</span>
+                <h1>Review <span class="gradient-text">Sentiment Studio</span></h1>
+                <p>Harness Microsoft Azure AI Language services to perform deep emotional valence classification, confidence breakdown, key phrase extraction, and sentence-level opinion mining in real-time.</p>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <a href="#workspace" class="btn-primary" style="flex: none; text-decoration: none;">🚀 Launch Studio</a>
+                    <button type="button" class="btn-secondary" id="configToggleBtn" style="border: none; background: transparent; padding: 0.5rem;">
+                        ⚙️ API Settings <span id="configIcon" style="font-size: 0.7rem;">▼</span>
+                    </button>
+                </div>
+            </div>
+            <div class="orb-container">
+                <div class="orb-wrapper" id="orb">
+                    <div class="orb-ring"></div>
+                    <div class="orb-ring"></div>
+                    <div class="orb-ring"></div>
+                    <div class="orb-core" id="orbCore">
+                        <span class="orb-icon" id="orbIcon">⚡</span>
+                        <span class="mono" style="font-size: 0.9rem; font-weight: 700; margin-top: 4px;" id="orbVal">IDLE</span>
+                    </div>
+                </div>
+                <span class="orb-label">Real-time Valence Gauge</span>
+            </div>
+        </section>
+
+        <!-- KPI Summary Cards -->
+        <section class="kpi-row">
+            <article class="kpi-card">
+                <span class="kpi-label">Analyzed Queries</span>
+                <span class="kpi-val" id="kpiTotal">0</span>
+            </article>
+            <article class="kpi-card">
+                <span class="kpi-label">Positive Valence</span>
+                <span class="kpi-val" id="kpiPosPercent">0%</span>
+            </article>
+            <article class="kpi-card">
+                <span class="kpi-label">API REST Version</span>
+                <span class="kpi-val" style="font-size: 1.2rem; color: var(--azure-light);">v2023-04-01</span>
+            </article>
+            <article class="kpi-card">
+                <span class="kpi-label">Avg Response Latency</span>
+                <span class="kpi-val" id="kpiLatency">0 ms</span>
+            </article>
+        </section>
+
+        <!-- Interactive Workspace (Form & Results) -->
+        <section class="workspace-grid" id="workspace">
+            
+            <!-- Left Column: Input Studio -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">✍️ Review Analyzer Studio</h2>
+                    <span class="mono" style="font-size: 0.75rem; color: var(--azure-light);">en-US</span>
+                </div>
+
+                <!-- Sample Reviews -->
+                <div class="sample-reviews">
+                    <span class="sample-label">Quick Test Sample Reviews:</span>
+                    <div class="chips-container">
+                        <button type="button" class="chip" onclick="loadSampleChip('pos')">⭐ 5-Star Praise</button>
+                        <button type="button" class="chip" onclick="loadSampleChip('neg')">⚠️ Critical Review</button>
+                        <button type="button" class="chip" onclick="loadSampleChip('neu')">⚖️ Balanced Opinion</button>
+                        <button type="button" class="chip" onclick="loadSampleChip('mix')">🔮 Mixed Feelings</button>
+                    </div>
+                </div>
+
+                <!-- Text Area Input -->
+                <div class="textarea-wrapper">
+                    <textarea id="reviewText" placeholder="Type or paste a product review, customer feedback, or movie review here..."></textarea>
+                    <div class="text-meta">
+                        <span id="textMeta">0 words · 0 characters</span>
+                        <span>Max 5,120 chars (Azure limit)</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-row">
+                    <button type="button" class="btn-primary" id="analyzeBtn" onclick="analyzeReview()">
+                        ⚡ Analyze Sentiment
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="clearWorkspace()" title="Clear text and reset results">
+                        🗑️ Clear
+                    </button>
+                </div>
+
+                <!-- Collapsible Azure API Configuration Panel -->
+                <div class="config-section">
+                    <div class="config-panel" id="configPanel">
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+                            Connected to your live Azure Cognitive Services resource. Toggle Demo Mode below for offline instant UI testing.
+                        </p>
+                        <div class="form-group">
+                            <label for="azureEndpointInput">Azure Endpoint URL</label>
+                            <input type="text" id="azureEndpointInput" class="form-input" placeholder="https://your-resource-name.cognitiveservices.azure.com/">
+                        </div>
+                        <div class="form-group">
+                            <label for="azureKeyInput">Subscription Key (Ocp-Apim-Subscription-Key)</label>
+                            <input type="password" id="azureKeyInput" class="form-input" placeholder="32-character hex key from Azure Portal">
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                            <label class="mode-switch" style="cursor: pointer;">
+                                <input type="checkbox" id="demoModeCheckbox" style="cursor: pointer;">
+                                <span>Enable Demo Mode (Mock AI Responses)</span>
+                            </label>
+                            <button type="button" class="btn-primary" id="saveConfigBtn" style="padding: 0.5rem 1rem; font-size: 0.8rem; flex: none;">
+                                💾 Save Key
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Results & Sentence Breakdown -->
+            <div class="card" style="min-height: 480px;">
+                <div class="card-header">
+                    <h2 class="card-title">📊 Cognitive Analysis Results</h2>
+                    <span class="mono" style="font-size: 0.75rem; color: var(--text-dim);">JSON Output parsed</span>
+                </div>
+
+                <!-- Empty State -->
+                <div class="results-empty" id="resultsEmpty">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    <h3 style="margin-bottom: 0.5rem; color: var(--text-main);">Ready to Analyze</h3>
+                    <p>Enter review text on the left and click <strong>⚡ Analyze Sentiment</strong> to view valence classification, confidence scores, key phrases, and sentence opinion mining.</p>
+                </div>
+
+                <!-- Loaded Results Area -->
+                <div class="results-content" id="resultsContent">
+                    
+                    <!-- Hero Sentiment Badge Card -->
+                    <div class="sentiment-hero-badge">
+                        <div class="badge-info">
+                            <div class="badge-icon" id="badgeIcon">🧠</div>
+                            <div class="badge-text">
+                                <h3 id="badgeTitle">Positive</h3>
+                                <span id="badgeDesc">High positive emotional valence detected across the text.</span>
+                            </div>
+                        </div>
+                        <div class="confidence-big">
+                            <div class="val" id="confidenceBigVal">0%</div>
+                            <div class="lbl">Confidence</div>
+                        </div>
+                    </div>
+
+                    <!-- Confidence Scores Breakdown -->
+                    <div>
+                        <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--text-muted);">Confidence Score Distribution</h4>
+                        <div class="confidence-bars">
+                            <div class="bar-row">
+                                <div class="bar-label">
+                                    <span style="color: var(--positive);">Positive</span>
+                                    <span class="mono" id="posVal">0%</span>
+                                </div>
+                                <div class="bar-track"><div class="bar-fill pos" id="posBar" style="width: 0%;"></div></div>
+                            </div>
+                            <div class="bar-row">
+                                <div class="bar-label">
+                                    <span style="color: var(--neutral);">Neutral</span>
+                                    <span class="mono" id="neuVal">0%</span>
+                                </div>
+                                <div class="bar-track"><div class="bar-fill neu" id="neuBar" style="width: 0%;"></div></div>
+                            </div>
+                            <div class="bar-row">
+                                <div class="bar-label">
+                                    <span style="color: var(--negative);">Negative</span>
+                                    <span class="mono" id="negVal">0%</span>
+                                </div>
+                                <div class="bar-track"><div class="bar-fill neg" id="negBar" style="width: 0%;"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Extracted Key Phrases -->
+                    <div>
+                        <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-muted);">Extracted Key Phrases</h4>
+                        <div id="keyPhrasesList" style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.5rem;">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Sentence-Level Opinion Mining -->
+                    <div>
+                        <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--text-muted);">Sentence-Level Valence Mining</h4>
+                        <div class="sentences-list" id="sentencesList">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Analytics & History Section -->
+        <section class="analytics-grid" id="analytics">
+            <!-- Sentiment Distribution Chart -->
+            <article class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📈 Sentiment Distribution</h2>
+                    <span class="mono" style="font-size: 0.75rem; color: var(--text-dim);">Session Stats</span>
+                </div>
+                <div class="chart-box">
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+            </article>
+
+            <!-- Recent Activity Log Table -->
+            <article class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📋 Activity & Telemetry Log</h2>
+                    <span class="mono" style="font-size: 0.75rem; color: var(--text-dim);">Last 10 queries</span>
+                </div>
+                <div class="history-table-wrapper" style="max-height: 260px; overflow-y: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Query Snippet</th>
+                                <th>Valence</th>
+                                <th>Key Phrases</th>
+                                <th>Score</th>
+                                <th>Latency</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr class="empty-row"><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 2rem;">No telemetry recorded yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+
+    </main>
+
+    <!-- ── Footer ─────────────────────────────────────────────────────── -->
+    <footer style="border-top: 1px solid var(--border-color); padding: 2.5rem; text-align: center; color: var(--text-dim); font-size: 0.85rem; margin-top: 4rem;">
+        <p>Microsoft Azure Cognitive Services · AI Language API REST v2023-04-01</p>
+        <p style="margin-top: 0.4rem;">Built for Azure Cloud Bootcamp Project 2 · Powered by Azure AI</p>
+    </footer>
+
+    <script src="index.js"></script>
+</body>
+</html>
